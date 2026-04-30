@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GujRERA Gateway</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260427c">
+</head>
+<body>
+  <div class="site-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Production Dashboard</p>
+        <h1>GujRERA project intelligence without a database.</h1>
+        <p class="lede">
+          This webapp pulls the public GujRERA APIs on demand, merges the live project payloads,
+          and renders one usable view for registration, financials, progress, inventory, and filings.
+        </p>
+      </div>
+      <div class="hero-panel">
+        <div class="hero-metric">
+          <span id="totalProjects">0</span>
+          <small>Projects discovered</small>
+        </div>
+        <div class="hero-metric">
+          <span id="filteredProjects">0</span>
+          <small>Current result set</small>
+        </div>
+      </div>
+    </header>
+
+    <section class="filters">
+      <div class="field">
+        <label for="searchInput">Search</label>
+        <input id="searchInput" type="search" placeholder="Project, promoter, or registration number">
+      </div>
+      <div class="field">
+        <label for="districtFilter">District</label>
+        <select id="districtFilter"></select>
+      </div>
+      <div class="field">
+        <label for="typeFilter">Project Type</label>
+        <select id="typeFilter"></select>
+      </div>
+      <div class="field">
+        <label for="statusFilter">Status</label>
+        <select id="statusFilter"></select>
+      </div>
+    </section>
+
+    <section id="summaryStats" class="stat-grid"></section>
+
+    <main class="workspace">
+      <aside class="project-list-panel">
+        <div class="panel-head">
+          <h2>Projects</h2>
+          <span id="listCountBadge" class="badge subtle">0 results</span>
+        </div>
+        <div id="projectList" class="project-list"></div>
+      </aside>
+
+      <section class="detail-panel">
+        <div id="detailState" class="empty-state">
+          <h2>Select a project</h2>
+          <p>The live detail view loads all related GujRERA sections for the selected registration.</p>
+        </div>
+        <div id="detailContent" class="detail-content hidden"></div>
+      </section>
+    </main>
+  </div>
+
+  <template id="loadingTemplate">
+    <div class="loading-card">Loading live project data...</div>
+  </template>
+
+  <script src="/static/app.js?v=20260427c" defer></script>
+</body>
+</html>

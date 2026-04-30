@@ -1,0 +1,1 @@
+"""GujRERA gateway application package."""
