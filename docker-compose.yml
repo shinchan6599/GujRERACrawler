@@ -13,3 +13,5 @@ services:
       GUJRERA_BASE_URL: https://gujrera.gujarat.gov.in
       CORS_ALLOW_ORIGINS: '["*"]'
       OPENSSL_CONF: /app/openssl_legacy.cnf
+    volumes:
+      - ./data:/app/data

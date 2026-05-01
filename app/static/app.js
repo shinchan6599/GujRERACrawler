@@ -8,6 +8,8 @@ const state = {
   selectedQuarterId: null,
   quarterDetail: null,
   quarterDetailLoading: false,
+  activeSyncRunId: null,
+  syncPollTimer: null,
 };
 
 const els = {
@@ -22,6 +24,17 @@ const els = {
   districtFilter: document.getElementById("districtFilter"),
   typeFilter: document.getElementById("typeFilter"),
   statusFilter: document.getElementById("statusFilter"),
+  storageSummary: document.getElementById("storageSummary"),
+  refreshStorage: document.getElementById("refreshStorage"),
+  syncLimit: document.getElementById("syncLimit"),
+  syncOffset: document.getElementById("syncOffset"),
+  syncConcurrency: document.getElementById("syncConcurrency"),
+  startSync: document.getElementById("startSync"),
+  syncStatus: document.getElementById("syncStatus"),
+  ragQuery: document.getElementById("ragQuery"),
+  askRag: document.getElementById("askRag"),
+  ragAnswer: document.getElementById("ragAnswer"),
+  ragCitations: document.getElementById("ragCitations"),
 };
 
 function formatNumber(value) {
@@ -147,6 +160,117 @@ function detailKeyValue(label, value) {
       <strong>${escapeHtml(value || "NA")}</strong>
     </div>
   `;
+}
+
+function renderStorageSummary(summary) {
+  els.storageSummary.innerHTML = [
+    ["DB Path", summary.db_path],
+    ["Projects", formatNumber(summary.project_count)],
+    ["Blocks", formatNumber(summary.block_count)],
+    ["Quarters", formatNumber(summary.quarter_count)],
+    ["Inventory Rows", formatNumber(summary.inventory_count)],
+    ["RAG Chunks", formatNumber(summary.rag_chunk_count)],
+  ].map(([label, value]) => detailKeyValue(label, value)).join("");
+
+  const last = summary.last_sync_run;
+  if (last) {
+    els.syncStatus.textContent =
+      `Last sync run #${last.id}: ${last.status}. Synced ${last.synced_projects}/${last.total_projects ?? "?"}, failed ${last.failed_projects}.`;
+  }
+}
+
+async function loadStorageSummary() {
+  try {
+    const response = await fetch("/api/storage/summary");
+    if (!response.ok) {
+      throw new Error(`Storage summary failed with ${response.status}`);
+    }
+    const summary = await response.json();
+    renderStorageSummary(summary);
+  } catch (error) {
+    els.storageSummary.innerHTML = detailKeyValue("Storage", error.message);
+  }
+}
+
+async function pollSyncRun(runId) {
+  if (state.syncPollTimer) {
+    clearTimeout(state.syncPollTimer);
+    state.syncPollTimer = null;
+  }
+  try {
+    const response = await fetch(`/api/storage/runs/${runId}`);
+    if (!response.ok) {
+      throw new Error(`Sync status failed with ${response.status}`);
+    }
+    const run = await response.json();
+    els.syncStatus.textContent =
+      `Run #${run.id}: ${run.status}. Synced ${run.synced_projects}/${run.total_projects ?? "?"}, failed ${run.failed_projects}.`;
+    if (run.status === "running") {
+      state.syncPollTimer = setTimeout(() => pollSyncRun(runId), 2500);
+    } else {
+      await loadStorageSummary();
+    }
+  } catch (error) {
+    els.syncStatus.textContent = error.message;
+  }
+}
+
+async function startLocalSync() {
+  els.syncStatus.textContent = "Starting local sync...";
+  const payload = {
+    limit: els.syncLimit.value ? Number(els.syncLimit.value) : null,
+    offset: els.syncOffset.value ? Number(els.syncOffset.value) : 0,
+    concurrency: els.syncConcurrency.value ? Number(els.syncConcurrency.value) : 4,
+  };
+  try {
+    const response = await fetch("/api/storage/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error(`Sync start failed with ${response.status}`);
+    }
+    const run = await response.json();
+    state.activeSyncRunId = run.id;
+    pollSyncRun(run.id);
+  } catch (error) {
+    els.syncStatus.textContent = error.message;
+  }
+}
+
+async function askLocalKnowledge() {
+  const query = els.ragQuery.value.trim();
+  if (!query) {
+    els.ragAnswer.textContent = "Enter a query first.";
+    return;
+  }
+  els.ragAnswer.textContent = "Querying local knowledge base...";
+  els.ragCitations.innerHTML = "";
+  try {
+    const response = await fetch("/api/rag/answer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, limit: 8 }),
+    });
+    if (!response.ok) {
+      throw new Error(`RAG answer failed with ${response.status}`);
+    }
+    const result = await response.json();
+    els.ragAnswer.textContent = result.answer;
+    els.ragCitations.innerHTML = result.citations.slice(0, 8).map((item) => `
+      <button class="ghost rag-open-project" data-project-id="${item.project_reg_id}">
+        ${escapeHtml(item.project_name || "Unknown project")} · ${escapeHtml(item.section)} · ${escapeHtml(item.title)}
+      </button>
+    `).join("");
+    els.ragCitations.querySelectorAll(".rag-open-project").forEach((button) => {
+      button.addEventListener("click", () => {
+        selectProject(Number(button.dataset.projectId));
+      });
+    });
+  } catch (error) {
+    els.ragAnswer.textContent = error.message;
+  }
 }
 
 function renderTrendSvg(trend) {
@@ -717,6 +841,7 @@ async function bootstrap() {
     buildOptions(els.statusFilter, new Set(state.listing.projects.map((item) => item.project_status)), "All statuses");
     renderProjectList();
     els.listCountBadge.textContent = `${state.filteredProjects.length} results`;
+    await loadStorageSummary();
   } catch (error) {
     els.projectList.innerHTML = `
       <div class="empty-state">
@@ -730,6 +855,16 @@ async function bootstrap() {
 [els.searchInput, els.districtFilter, els.typeFilter, els.statusFilter].forEach((element) => {
   element.addEventListener("input", applyFilters);
   element.addEventListener("change", applyFilters);
+});
+
+els.refreshStorage.addEventListener("click", loadStorageSummary);
+els.startSync.addEventListener("click", startLocalSync);
+els.askRag.addEventListener("click", askLocalKnowledge);
+els.ragQuery.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    askLocalKnowledge();
+  }
 });
 
 bootstrap();

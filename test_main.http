@@ -10,3 +10,24 @@ Accept: application/json
 
 GET http://127.0.0.1:8000/api/projects/10189
 Accept: application/json
+
+###
+
+GET http://127.0.0.1:8000/api/storage/summary
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/storage/sync
+Content-Type: application/json
+
+{
+  "limit": 2,
+  "offset": 0,
+  "concurrency": 2
+}
+
+###
+
+GET http://127.0.0.1:8000/api/rag/search?q=Vadodara
+Accept: application/json

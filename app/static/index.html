@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GujRERA Gateway</title>
-  <link rel="stylesheet" href="/static/style.css?v=20260427c">
+  <link rel="stylesheet" href="/static/style.css?v=20260501a">
 </head>
 <body>
   <div class="site-shell">
@@ -48,6 +48,48 @@
       </div>
     </section>
 
+    <section class="local-tools">
+      <article class="panel-card">
+        <div class="toggle-row">
+          <h3>Local Database</h3>
+          <button id="refreshStorage" class="ghost">Refresh</button>
+        </div>
+        <div id="storageSummary" class="kv-grid"></div>
+        <div class="sync-controls">
+          <div class="field">
+            <label for="syncLimit">Sync Limit</label>
+            <input id="syncLimit" type="number" min="1" placeholder="Blank means all projects">
+          </div>
+          <div class="field">
+            <label for="syncOffset">Offset</label>
+            <input id="syncOffset" type="number" min="0" value="0">
+          </div>
+          <div class="field">
+            <label for="syncConcurrency">Concurrency</label>
+            <input id="syncConcurrency" type="number" min="1" max="12" value="4">
+          </div>
+          <div class="field field-action">
+            <label>&nbsp;</label>
+            <button id="startSync" class="ghost">Sync Local DB</button>
+          </div>
+        </div>
+        <p id="syncStatus" class="note">No sync started in this session.</p>
+      </article>
+
+      <article class="panel-card">
+        <div class="toggle-row">
+          <h3>Local Query</h3>
+          <button id="askRag" class="ghost">Run Query</button>
+        </div>
+        <div class="field">
+          <label for="ragQuery">Question</label>
+          <input id="ragQuery" type="search" placeholder="Example: projects in Vadodara with PAN AABPS4553G or quarter Q-1 progress">
+        </div>
+        <div id="ragAnswer" class="rag-answer note">Local answers will appear here after the database has been synced.</div>
+        <div id="ragCitations" class="list-links"></div>
+      </article>
+    </section>
+
     <section id="summaryStats" class="stat-grid"></section>
 
     <main class="workspace">
@@ -73,6 +115,6 @@
     <div class="loading-card">Loading live project data...</div>
   </template>
 
-  <script src="/static/app.js?v=20260427c" defer></script>
+  <script src="/static/app.js?v=20260501a" defer></script>
 </body>
 </html>

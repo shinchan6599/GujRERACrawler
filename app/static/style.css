@@ -105,7 +105,8 @@ p {
 
 .filters,
 .workspace,
-.stat-grid {
+.stat-grid,
+.local-tools {
   margin-top: 24px;
 }
 
@@ -144,6 +145,29 @@ p {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
+}
+
+.local-tools {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 18px;
+}
+
+.sync-controls {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field-action {
+  justify-content: flex-end;
+}
+
+.rag-answer {
+  margin-top: 16px;
+  white-space: pre-line;
+  line-height: 1.6;
 }
 
 .stat-card,
@@ -467,7 +491,8 @@ button.ghost {
   .workspace,
   .hero,
   .detail-hero,
-  .detail-grid {
+  .detail-grid,
+  .local-tools {
     grid-template-columns: 1fr;
   }
 
@@ -482,7 +507,8 @@ button.ghost {
   }
 
   .filters,
-  .kv-grid {
+  .kv-grid,
+  .sync-controls {
     grid-template-columns: 1fr;
   }
 

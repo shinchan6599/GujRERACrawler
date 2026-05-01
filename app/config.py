@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field
@@ -20,6 +21,10 @@ class Settings(BaseSettings):
 
     listing_cache_ttl_seconds: int = 3600
     cors_allow_origins: list[str] = Field(default_factory=lambda: ["*"])
+    local_db_path: str = str(Path("data") / "gujrera_local.db")
+    local_sync_concurrency: int = 4
+    local_sync_batch_size: int = 100
+    rag_default_limit: int = 8
 
     model_config = SettingsConfigDict(
         env_file=".env",
